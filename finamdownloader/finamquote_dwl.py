@@ -1,4 +1,4 @@
-from pandas import DataFrame, read_csv
+from pandas import DataFrame, read_csv, ExcelWriter
 from urllib.parse import urlencode
 from urllib.request import urlopen, Request
 from datetime import datetime, timedelta, date
@@ -97,7 +97,7 @@ def __get_tick_quotes_finam__(symbol, start_date, end_date):
         req.add_header('Referer', 'http://www.finam.ru/analysis/profile0000300007/default.asp')
         r = urlopen(req)
         try:
-            tmp_data = read_csv(r, index_col=0, parse_dates={'index': [0, 1]}, sep=';').sort_index()
+            tmp_data = read_csv(r, sep=';').sort_index()
             if data.empty:
                 data = tmp_data
             else:
@@ -105,7 +105,7 @@ def __get_tick_quotes_finam__(symbol, start_date, end_date):
         except Exception:
             print('error on data downloading {} {}'.format(symbol, start_date + day))
 
-    data.columns = [symbol + '.' + i for i in ['Last', 'Vol', 'Id']]
+    data.columns = [symbol + '.' + i for i in ['Date', 'Time', 'Last', 'Volume', 'Id']]
     return data
 
 
@@ -122,9 +122,24 @@ def __get_tick_quotes_finam_all__(symbol, start_date, end_date):
 
 
 if __name__ == "__main__":
-    code = 'FEES'
+    code = 'SiH5, RIH5'.replace(" ", "").split(',')
+    start ='20141208'
+    end = '20141209'
+
+    code_lst = []
+    for i in code:
+        if len(i) > 2:
+            code_lst.append(i)
     per = 'tick'
-    print('download %s data for %s' % (per, code))
-    quote = get_quotes_finam(code, start_date='20131122', end_date='20131125', period=per)
-    print(quote)
-    print(quote.head())
+
+    for y in code_lst:
+        print('download %s data for %s' % (per, y))
+        quote = get_quotes_finam(y, start_date=start, end_date= end, period=per)
+        print(quote.head(n=3))
+
+        #C:\\Users\\andreyev\\PycharmProjects\\trade\\
+        url = '{0}.xlsx'.format(y+"_"+start+"_"+end)
+        with ExcelWriter(url) as writer:
+            quote.to_excel(writer, y)
+            #quote.to_excel(writer, 'Data 1')     #write to the second list
+            print(y + ' saved to file')
