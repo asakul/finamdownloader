@@ -137,7 +137,6 @@ if __name__ == "__main__":
         quote = get_quotes_finam(y, start_date=start, end_date= end, period=per)
         print(quote.head(n=3))
 
-        #C:\\Users\\andreyev\\PycharmProjects\\trade\\
         url = '{0}.xlsx'.format(y+"_"+start+"_"+end)
         with ExcelWriter(url) as writer:
             quote.to_excel(writer, y)
