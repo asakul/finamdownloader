@@ -171,7 +171,5 @@ if __name__ == "__main__":
     per = 'daily'
 
     __save_data__(code, start, end, per)
-
 #+++++++++++++++++++++++++++++++++++++++++++++++=
-
     #__save_to_one_file__(code, start, end, per)
