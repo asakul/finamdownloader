@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, date
 #import numpy as np
 import sys
 
+
 finam_symbols = urlopen('http://www.finam.ru/cache/icharts/icharts.js').readlines()
 periods = {'tick': 1, '1min': 2, '5min': 3, '10min': 4, '15min': 5,
            '30min': 6, 'hour': 7, 'daily': 8, 'week': 9, 'month': 10}
