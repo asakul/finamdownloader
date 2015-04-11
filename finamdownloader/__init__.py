@@ -1,1 +1,0 @@
-from .finamquote_dwl import get_quotes_finam, periods
