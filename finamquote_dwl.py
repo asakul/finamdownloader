@@ -83,7 +83,7 @@ def __get_tick_quotes_finam__(_symbol, start_date, end_date):
                 else:
                     data = data.append(tmp_data)
             except ValueError as e:
-                if e == 'No columns to parse from file':
+                if str(e) == 'No columns to parse from file':
                     print('no data: {} {}'.format(_symbol, start_date + day))
                 else:
                     print("error: ", e)
@@ -181,7 +181,7 @@ def __save_to_one_file__(_code, _start_date, _end_date, _per):
 
 if __name__ == "__main__":
     code = 'SiM5'
-    start ='20150224'
+    start ='20141201'
     end = '20150413'
     per = 'tick'
 
