@@ -3,6 +3,7 @@ from urllib.parse import urlencode
 from urllib.request import urlopen, Request
 from datetime import datetime, timedelta, date
 #import numpy as np
+from time import sleep
 import sys
 
 
@@ -54,7 +55,8 @@ def __get_url__(symbol, period, start_date, end_date):
 def __period__(s):
     return periods[s]
 
-def __get_tick_quotes_finam__(symbol, start_date, end_date):
+
+def __get_tick_quotes_finam__(_symbol, start_date, end_date):
     """
     Return downloaded tick quotes.
     """
@@ -62,28 +64,48 @@ def __get_tick_quotes_finam__(symbol, start_date, end_date):
     end_date = datetime.strptime(end_date, "%Y%m%d").date()
     delta = end_date - start_date
     data = DataFrame()
-    for i in range(delta.days + 1):
-        day = timedelta(i)
-        # exclude weekends
-        if (start_date + day).weekday() == 5 or (start_date + day).weekday() == 6:
-            continue
-        url = __get_url__(symbol, periods['tick'], start_date + day, start_date + day)
-        req = Request(url)
-        req.add_header('Referer', 'http://www.finam.ru/analysis/profile0000300007/default.asp')
-        r = urlopen(req)
-        try:
-            #tmp_data = read_csv(r, sep=';').sort_index() # индекс разделить на дату и время
-            tmp_data = read_csv(r, index_col=0, parse_dates={'index': [0, 1]}, sep=';').sort_index()
-            if data.empty:
-                data = tmp_data
-            else:
-                data = data.append(tmp_data)
-        except Exception:
-            print('error on data downloading {} {}'.format(symbol, start_date + day))
+    try:
+        for i in range(delta.days + 1):
+            day = timedelta(i)
+            # exclude weekends
+            if (start_date + day).weekday() == 5 or (start_date + day).weekday() == 6:
+                continue
 
-    data.columns = ['Last', 'Volume', 'Id']
-    data['Symbol'] = symbol
-    return data
+            url = __get_url__(_symbol, periods['tick'], start_date + day, start_date + day)
+            req = Request(url)
+            req.add_header('Referer', 'http://www.finam.ru/analysis/profile0000300007/default.asp')
+            r = urlopen(req)
+            try:
+                #tmp_data = read_csv(r, sep=';').sort_index() # индекс разделить на дату и время
+                tmp_data = read_csv(r, index_col=0, parse_dates={'index': [0, 1]}, sep=';').sort_index()
+                if data.empty:
+                    data = tmp_data
+                else:
+                    data = data.append(tmp_data)
+            except Exception as ex:
+                print('downloading error: {} {}  = {}'.format(_symbol, start_date + day, ex))
+                sleep(2)  # а то банят :)
+    except Exception as e:
+        print(e)
+    finally:
+        data.columns = ['Last', 'Volume', 'Id']
+        data['Symbol'] = _symbol
+        return data
+
+
+def __get_timeframe_finam__(_symbol, start_date, end_date, period):
+    try:
+        start_date = datetime.strptime(start_date, "%Y%m%d").date()
+        end_date = datetime.strptime(end_date, "%Y%m%d").date()
+        url = __get_url__(_symbol, __period__(period), start_date, end_date)
+        pdata = read_csv(url, index_col=0, parse_dates={'index': [0, 1]}, sep=';').sort_index()
+    except Exception as e:
+        print(e)
+    finally:
+        pdata.columns = ['Open', 'High', 'Low', 'Close', 'Volume']
+        #[symbol + '.' + i for i in ['Open', 'High', 'Low', 'Close', 'Volume']]
+        pdata['Symbol'] = _symbol
+        return pdata
 
 
 def get_quotes_finam(symbol, start_date='20150101', end_date=date.today().strftime("%Y%m%d"),
@@ -95,45 +117,33 @@ def get_quotes_finam(symbol, start_date='20150101', end_date=date.today().strfti
     """
     if __period__(period) == periods['tick']:
         return __get_tick_quotes_finam__(symbol, start_date, end_date)
-#     elif __period__(period) >= periods['daily']:
-#         return __get_daily_quotes_finam__(symbol, start_date, end_date, period)
     else:
-        start_date = datetime.strptime(start_date, "%Y%m%d").date()
-        end_date = datetime.strptime(end_date, "%Y%m%d").date()
-        url = __get_url__(symbol, __period__(period), start_date, end_date)
-        pdata = read_csv(url, index_col=0, parse_dates={'index': [0, 1]}, sep=';').sort_index()
-        pdata.columns = ['Open', 'High', 'Low', 'Close', 'Volume']
-        #[symbol + '.' + i for i in ['Open', 'High', 'Low', 'Close', 'Volume']]
-        pdata['Symbol'] = symbol
-        return pdata
+        return __get_timeframe_finam__(symbol, start_date, end_date, period)
 
 
-def __save_data__(_code, startdata, enddata, _period):
+def save_data(_code, _start_date, _end_date, _per):
     """
     each instrument will be saved in separate excel file.
     """
     clean_code = _code.replace(" ", "").split(',')
 
     for y in clean_code:
-        try:
-            print('download %s data for %s' % (_period, y))
-            quote = get_quotes_finam(y, start_date=startdata, end_date=enddata, period=_period)
-            print(quote.head(n=3))
-        except:
-            print("ошибка скачивания: {0}".format(y), sys.exc_info()[0])
+        print('download %s data for %s' % (_per, y))
+        quote = get_quotes_finam(symbol=y, start_date=_start_date, end_date=_end_date, period=_per)
+        print(quote.head(n=3))
 
         #C:\\Users\\login\\PycharmProjects\\trade\\
-        url = '{0}.xlsx'.format(y+"_"+startdata+"_"+enddata)
+        url = '{0}.xlsx'.format(y+"_"+_start_date+"_"+_end_date)
         try:
             with ExcelWriter(url) as writer:
                 quote.to_excel(writer, y)
                 #quote.to_excel(writer, 'Data 1')     #write to the second list
                 print(y + ' saved to file')
-        except:
-            print("ошибка записи в файл:", sys.exc_info()[0])
+        except Exception as e:
+            print("save to file error: ", sys.exc_info()[0], e)
 
 
-def __save_to_one_file__(_code, startdata, enddata, _period):
+def __save_to_one_file__(_code, _start_date, _end_date, _per):
     """
     Save all quotes to 1 excel file
     """
@@ -142,12 +152,10 @@ def __save_to_one_file__(_code, startdata, enddata, _period):
     _df = DataFrame()  # (np.random.randn(1, 6), columns=['Open', 'High', 'Low', 'Close', 'Volume', 'Symbol'])
     for y in clean_code:
         try:
-            #print('download %s data for %s' % ('daily', y))
-            quote = get_quotes_finam(y, start_date=startdata, end_date=enddata, period=_period)
+            quote = get_quotes_finam(y, start_date=_start_date, end_date=_end_date, period=_per)
             _df = _df.append(quote[:])
-        except:
-            print("нет инструмента: {0}".format(y), sys.exc_info()[0])
-            #raise
+        except Exception as e:
+            print("could not find an instrument: {0}".format(y), sys.exc_info()[0], e)
             continue
 
     print(_df.head(n=5))
@@ -158,18 +166,18 @@ def __save_to_one_file__(_code, startdata, enddata, _period):
 
         except PermissionError as ex:
             print(ex)
-        except:
-            print("ошибка записи в файл:", sys.exc_info()[0])
+        except Exception as e:
+            print("save to file error:", sys.exc_info()[0], e)
         else:
-            print("Готово")
+            print("Finish")
 
 
 if __name__ == "__main__":
-    code = 'SBER, SiM5, AKRN'
-    start ='20150207'
-    end = '20150213'
+    code = 'AKRN'
+    start ='20150224'
+    end = '20150413'
     per = 'daily'
 
-    __save_data__(code, start, end, per)
+    save_data(code, start, end, per)
 #+++++++++++++++++++++++++++++++++++++++++++++++=
     #__save_to_one_file__(code, start, end, per)
