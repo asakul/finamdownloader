@@ -76,21 +76,28 @@ def __get_tick_quotes_finam__(_symbol, start_date, end_date):
             req.add_header('Referer', 'http://www.finam.ru/analysis/profile0000300007/default.asp')
             r = urlopen(req)
             try:
-                #tmp_data = read_csv(r, sep=';').sort_index() # индекс разделить на дату и время
+                #tmp_data = read_csv(r, sep=';').sort_index() # separate index: date and time
                 tmp_data = read_csv(r, index_col=0, parse_dates={'index': [0, 1]}, sep=';').sort_index()
                 if data.empty:
                     data = tmp_data
                 else:
                     data = data.append(tmp_data)
+            except ValueError as e:
+                if e == 'No columns to parse from file':
+                    print('no data: {} {}'.format(_symbol, start_date + day))
+                else:
+                    print("error: ", e)
+                    #raise
+                sleep(2)  # to avoid ban :)
             except Exception as ex:
-                print('downloading error: {} {}  = {}'.format(_symbol, start_date + day, ex))
-                sleep(2)  # а то банят :)
+                print('downloading error: {} {}  = {} {}'.format(_symbol, start_date + day, sys.exc_info()[0], ex))
+
     except Exception as e:
         print(e)
-    finally:
-        data.columns = ['Last', 'Volume', 'Id']
-        data['Symbol'] = _symbol
-        return data
+
+    data.columns = ['Last', 'Volume', 'Id']
+    data['Symbol'] = _symbol
+    return data
 
 
 def __get_timeframe_finam__(_symbol, start_date, end_date, period):
@@ -101,11 +108,11 @@ def __get_timeframe_finam__(_symbol, start_date, end_date, period):
         pdata = read_csv(url, index_col=0, parse_dates={'index': [0, 1]}, sep=';').sort_index()
     except Exception as e:
         print(e)
-    finally:
-        pdata.columns = ['Open', 'High', 'Low', 'Close', 'Volume']
-        #[symbol + '.' + i for i in ['Open', 'High', 'Low', 'Close', 'Volume']]
-        pdata['Symbol'] = _symbol
-        return pdata
+
+    pdata.columns = ['Open', 'High', 'Low', 'Close', 'Volume']
+    #[symbol + '.' + i for i in ['Open', 'High', 'Low', 'Close', 'Volume']]
+    pdata['Symbol'] = _symbol
+    return pdata
 
 
 def get_quotes_finam(symbol, start_date='20150101', end_date=date.today().strftime("%Y%m%d"),
@@ -173,10 +180,10 @@ def __save_to_one_file__(_code, _start_date, _end_date, _per):
 
 
 if __name__ == "__main__":
-    code = 'AKRN'
+    code = 'SiM5'
     start ='20150224'
     end = '20150413'
-    per = 'daily'
+    per = 'tick'
 
     save_data(code, start, end, per)
 #+++++++++++++++++++++++++++++++++++++++++++++++=
