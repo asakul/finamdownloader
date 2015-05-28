@@ -161,7 +161,6 @@ def __get_raw_timeframe_finam__(_symbol, params, start_date, end_date):
     date_list.pop(0)
     params.include_header = False
     while len(date_list) > 0:
-        print(date_list)
         sleep(2)  # to avoid ban :)
         (s, e) = date_list[0]
         date_list.pop(0)

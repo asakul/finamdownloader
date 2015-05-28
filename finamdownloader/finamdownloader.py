@@ -5,10 +5,10 @@ import argparse
 
 def main():
     parser = argparse.ArgumentParser(description='Finam quote downloader')
-    parser.add_argument('-s', '--symbol', action='store', dest='symbol', help='Ticker symbol to download', required=True)
+    parser.add_argument('-s', '--symbol', action='store', dest='symbol', help='Ticker symbol to download (pass "?" to list available symbols)', required=True)
     parser.add_argument('-f', '--from', action='store', dest='date_from', help='Starting date in YYYYMMDD format')
     parser.add_argument('-t', '--to', action='store', dest='date_to', help='Ending date in YYYYMMDD format')
-    parser.add_argument('-o', '--output', action='store', dest='output', help='Target file ("-" means stdout)')
+    parser.add_argument('-o', '--output', action='store', dest='output', help='Target file ("-" means stdout, "!" will create filename automatically)')
 
     periods = ", ".join(f.periods.keys())
 
