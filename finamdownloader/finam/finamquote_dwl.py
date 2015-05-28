@@ -6,7 +6,7 @@ from time import sleep
 import sys
 
 
-finam_symbols = urlopen('http://www.finam.ru/cache/icharts/icharts.js').readlines()
+finam_symbols = None 
 periods = {'tick': 1, '1min': 2, '5min': 3, '10min': 4, '15min': 5,
            '30min': 6, 'hour': 7, 'daily': 8, 'week': 9, 'month': 10}
 
@@ -28,6 +28,12 @@ field_separators = {',' : 1,
         'space' : 5 }
 
 __all__ = ['periods', 'date_formats', 'time_formats', 'field_separators', 'get_quotes_finam']
+
+def download_finam_symbols():
+    global finam_symbols
+    if not finam_symbols:
+        finam_symbols = urlopen('http://www.finam.ru/cache/icharts/icharts.js').readlines()
+    
 
 class Params:
     def __init__(self, period, date_fmt = date_formats['yyyymmdd'], time_fmt = time_formats['hhmmss'], field_separator = field_separators[','], include_header = True):
@@ -168,17 +174,9 @@ def get_raw_quotes_finam(symbol, params, start_date, end_date=date.today().strft
     Date format = YYYYMMDD
     Period can be in ['tick','1min','5min','10min','15min','30min','hour','daily','week','month']
     """
+    download_finam_symbols()
     if params.period == periods['tick']:
         raise Exception
     else:
         return __get_raw_timeframe_finam__(symbol, params, start_date, end_date)
-
-
-if __name__ == "__main__":
-    code = 'GAZP'
-    start ='20070101'
-    end = '20151231'
-    per = '15min'
-
-    print(get_raw_quotes_finam(code, Params(periods[per]), start, end).decode('utf-8'))
 
