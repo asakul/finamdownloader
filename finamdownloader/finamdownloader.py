@@ -6,7 +6,7 @@ import argparse
 def main():
     parser = argparse.ArgumentParser(description='Finam quote downloader')
     parser.add_argument('-s', '--symbol', action='store', dest='symbol', help='Ticker symbol to download', required=True)
-    parser.add_argument('-f', '--from', action='store', dest='date_from', help='Starting date in YYYYMMDD format', required=True)
+    parser.add_argument('-f', '--from', action='store', dest='date_from', help='Starting date in YYYYMMDD format')
     parser.add_argument('-t', '--to', action='store', dest='date_to', help='Ending date in YYYYMMDD format')
     parser.add_argument('-o', '--output', action='store', dest='output', help='Target file ("-" means stdout)')
 
@@ -18,6 +18,13 @@ def main():
 
     if not args.symbol:
         print("Should specify symbol")
+        return 1
+
+    if args.symbol == '?':
+        syms = f.get_symbols_list()
+        for (code, name) in syms:
+            if len(code) > 0:
+                print("{0} : {1}".format(code, name))
         return 1
 
     if not args.date_from:

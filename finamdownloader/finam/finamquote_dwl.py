@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*-
+
 from pandas import DataFrame, read_csv, ExcelWriter
 from urllib.parse import urlencode
 from urllib.request import urlopen, Request
 from datetime import datetime, timedelta, date
 from time import sleep
+import codecs
 import sys
 
 
@@ -27,7 +30,7 @@ field_separators = {',' : 1,
         'tab' : 4,
         'space' : 5 }
 
-__all__ = ['periods', 'date_formats', 'time_formats', 'field_separators', 'get_quotes_finam']
+__all__ = ['periods', 'date_formats', 'time_formats', 'field_separators', 'get_quotes_finam', 'get_symbols_list']
 
 def download_finam_symbols():
     global finam_symbols
@@ -179,4 +182,20 @@ def get_raw_quotes_finam(symbol, params, start_date, end_date=date.today().strft
         raise Exception
     else:
         return __get_raw_timeframe_finam__(symbol, params, start_date, end_date)
+
+def get_symbols_list():
+    download_finam_symbols()
+    s_code = str(finam_symbols[2])
+    star = str(s_code).find("[\'") + 2
+    en = s_code.find("\']")
+    codes = s_code[star : en].split('\',\'')
+
+    s_name = codecs.decode(finam_symbols[1], "cp1251")
+    star = str(s_name).find("[\'") + 2
+    en = s_name.find("\']")
+    names = s_name[star : en].split('\',\'')
+
+    result = zip(codes, names)
+    return result
+
 
