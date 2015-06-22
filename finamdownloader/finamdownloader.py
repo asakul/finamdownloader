@@ -43,11 +43,11 @@ def main():
 
     if args.output and args.output != '-':
         if args.output == '!':
-            out = open("{0}_{1}_{2}_{3}.csv".format(args.symbol, args.date_from, args.date_to, args.period), 'w+')
+            out = open("{0}_{1}_{2}_{3}.csv".format(args.symbol, args.date_from, args.date_to, args.period), 'wb+')
         else:
-            out = open(args.output, 'w+')
+            out = open(args.output, 'wb+')
 
-    out.write(f.get_raw_quotes_finam(args.symbol, f.Params(f.periods[args.period]), args.date_from, args.date_to).decode('utf-8'))
+    out.write(f.get_raw_quotes_finam(args.symbol, f.Params(f.periods[args.period]), args.date_from, args.date_to))
 
 
 if __name__ == '__main__':
