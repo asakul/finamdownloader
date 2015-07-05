@@ -13,6 +13,15 @@ finam_symbols = None
 periods = {'tick': 1, '1min': 2, '5min': 3, '10min': 4, '15min': 5,
            '30min': 6, 'hour': 7, 'daily': 8, 'week': 9, 'month': 10}
 
+finam_markets = { 200 : 'МосБиржа топ',
+    1 : 'МосБиржа акции',
+    14 : 'МосБиржа фьючерсы', 41: 'Курс рубля', 45: 'МосБиржа валютный рынок',
+    2: 'МосБиржа облигации', 12: 'МосБиржа внесписочные облигации', 29: 'МосБиржа пифы',
+    8: 'Расписки', 6: 'Мировые Индексы', 24: 'Товары', 5: 'Мировые валюты', 25: 'Акции США(BATS)', 7: 'Фьючерсы США', 27: 'Отрасли экономики США',
+    26: 'Гособлигации США', 28: 'ETF', 30: 'Индексы мировой экономики', 3: 'РТС', 20: 'RTS Board', 10: 'РТС-GAZ', 17: 'ФОРТС Архив',
+    31: 'Сырье Архив', 38: 'RTS Standard Архив', 16: 'ММВБ Архив', 18: 'РТС Архив', 9: 'СПФБ Архив', 32: 'РТС-BOARD Архив',
+    39: 'Расписки Архив', -1: 'Отрасли'}
+
 date_formats = {'yyyymmdd' : 1,
         'yymmdd' : 2,
         'ddmmyy' : 3,
@@ -30,7 +39,9 @@ field_separators = {',' : 1,
         'tab' : 4,
         'space' : 5 }
 
-__all__ = ['periods', 'date_formats', 'time_formats', 'field_separators', 'get_quotes_finam', 'get_symbols_list']
+archives = [3, 16, 17, 18, 31, 32, 38, 39]
+
+__all__ = ['periods', 'date_formats', 'time_formats', 'field_separators', 'get_quotes_finam', 'get_symbols_list', 'get_markets_list']
 
 def download_finam_symbols():
     global finam_symbols
@@ -45,21 +56,18 @@ class Params:
         self.time_format = time_fmt
         self.field_separator = field_separator
         self.include_header = include_header
+        self.force_market = None
 
 
-def __get_finam_code__(symbol):
-    s_id = str(finam_symbols[0])
-    s_code = str(finam_symbols[2])
-    star = str(s_code).find("[\'") + 2
-    en = s_code.find("\']")
-    names = s_code[star : en].split('\',\'')
-    ids = s_id[s_id.find('[') + 1 : s_id.find(']')].split(',')
-    if symbol in names:
-        max_id = 0
-        for i, name in enumerate(names):
-            if name == symbol and i > max_id:
-                max_id = i
-        return int(ids[max_id])
+def __get_finam_code__(symbol, force_market=None):
+    symbols = get_symbols_list()
+    for (code, _, id_, market, _) in symbols:
+        if code == symbol:
+            if force_market and force_market == market:
+                return (id_, market)
+            if not force_market and market in archives: # Skip RTS
+                continue
+            return (id_, market)
     else:
         raise Exception("%s not found\r\n" % symbol)
 
@@ -68,15 +76,22 @@ def __get_url__(symbol, params, start_date, end_date):
     include_header = 0
     if params.include_header:
         include_header = 1
+    
+    force_market = None
+    try:
+        force_market = params.force_market
+    except KeyError:
+        pass
+        
+    (symb, market) = __get_finam_code__(symbol, force_market)
 
     finam_HOST = "195.128.78.52"
-    finam_URL = "/table.csv?d=d&market=1&f=table&e=.csv&dtf={0}&tmf={1}&MSOR=0&mstime=on&mstimever=1&sep={2}&sep2=1&at={3}&".format(params.date_format, params.time_format, params.field_separator, include_header)
-    symb = __get_finam_code__(symbol)
+    finam_URL = "/export9.out?d=d&market={0}&f=table&e=.csv&dtf={1}&tmf={2}&MSOR=0&mstime=on&mstimever=1&sep={3}&sep2=1&at={4}&".format(market, params.date_format, params.time_format, params.field_separator, include_header)
     request_params = urlencode({"p": params.period, "em": symb,
                         "df": start_date.day, "mf": start_date.month - 1,
                         "yf": start_date.year,
                         "dt": end_date.day, "mt": end_date.month - 1,
-                        "yt": end_date.year, "cn": symbol})
+                        "yt": end_date.year, "code": symbol})
 
     stock_URL = finam_URL + request_params
     if params.period == periods['tick']:
@@ -193,8 +208,23 @@ def get_symbols_list():
     star = str(s_name).find("[\'") + 2
     en = s_name.find("\']")
     names = s_name[star : en].split('\',\'')
+    
+    s_id = codecs.decode(finam_symbols[0], "cp1251")
+    star = str(s_id).find("[") + 1
+    en = s_id.find("]")
+    ids = s_id[star : en].split(',')
+    
+    s_markets = codecs.decode(finam_symbols[3], "cp1251")
+    star = str(s_markets).find("[") + 1
+    en = s_markets.find("]")
+    markets_s = s_markets[star : en].split(',')
 
-    result = zip(codes, names)
+    markets = list(map(lambda x: int(x), markets_s))
+    market_names = list(map(lambda x: finam_markets[x], markets))
+    
+    result = zip(codes, names, ids, markets, market_names)
     return result
 
-
+def get_markets_list():
+    return finam_markets
+        
