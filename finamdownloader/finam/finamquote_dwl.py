@@ -197,6 +197,12 @@ def get_raw_quotes_finam(symbol, params, start_date, end_date=date.today().strft
     else:
         return __get_raw_timeframe_finam__(symbol, params, start_date, end_date)
 
+def get_or_default(a_list, key, default_value):
+    try:
+        return a_list[key]
+    except KeyError:
+        return default_value
+
 def get_symbols_list():
     download_finam_symbols()
     s_code = str(finam_symbols[2])
@@ -220,7 +226,7 @@ def get_symbols_list():
     markets_s = s_markets[star : en].split(',')
 
     markets = list(map(lambda x: int(x), markets_s))
-    market_names = list(map(lambda x: finam_markets[x], markets))
+    market_names = list(map(lambda x: get_or_default(finam_markets, x, ""), markets))
     
     result = zip(codes, names, ids, markets, market_names)
     return result
