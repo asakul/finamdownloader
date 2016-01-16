@@ -10,6 +10,7 @@ def main():
     parser.add_argument('-t', '--to', action='store', dest='date_to', help='Ending date in YYYYMMDD format')
     parser.add_argument('-o', '--output', action='store', dest='output', help='Target file ("-" means stdout, "!" will create filename automatically)')
     parser.add_argument('-m', '--market', action='store', dest='market', help='Force market ("?" will list all available markets and their ids)')
+    parser.add_argument('-l', '--fill-empty', action='store_true', dest='fill_empty', help='Fill empty periods')
 
     periods = ", ".join(f.periods.keys())
 
@@ -56,6 +57,10 @@ def main():
     params = f.Params(f.periods[args.period])
     if args.market:
         params.force_market = args.market
+
+    if args.fill_empty:
+        params.fill_empty = True
+
     out.write(f.get_raw_quotes_finam(args.symbol, params, args.date_from, args.date_to))
 
 

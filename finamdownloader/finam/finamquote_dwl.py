@@ -39,7 +39,7 @@ field_separators = {',' : 1,
         'tab' : 4,
         'space' : 5 }
 
-archives = [3, 16, 17, 18, 31, 32, 38, 39]
+archives = [3, 16, 17, 18, 31, 32, 38, 39, 517]
 
 __all__ = ['periods', 'date_formats', 'time_formats', 'field_separators', 'get_quotes_finam', 'get_symbols_list', 'get_markets_list']
 
@@ -57,6 +57,7 @@ class Params:
         self.field_separator = field_separator
         self.include_header = include_header
         self.force_market = None
+        self.fill_empty = False
 
 
 def __get_finam_code__(symbol, force_market=None):
@@ -86,7 +87,10 @@ def __get_url__(symbol, params, start_date, end_date):
     (symb, market) = __get_finam_code__(symbol, force_market)
 
     finam_HOST = "195.128.78.52"
-    finam_URL = "/export9.out?d=d&market={0}&f=table&e=.csv&dtf={1}&tmf={2}&MSOR=0&mstime=on&mstimever=1&sep={3}&sep2=1&at={4}&".format(market, params.date_format, params.time_format, params.field_separator, include_header)
+    finam_URL = "/export9.out?market={0}&f={5}&e=.csv&dtf={1}&tmf={2}&MSOR=0&mstime=on&mstimever=1&sep={3}&sep2=1&at={4}&".format(market, params.date_format, params.time_format, params.field_separator, include_header, symbol)
+    if params.fill_empty:
+        finam_URL += 'fsp=1&'
+
     request_params = urlencode({"p": params.period, "em": symb,
                         "df": start_date.day, "mf": start_date.month - 1,
                         "yf": start_date.year,
