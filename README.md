@@ -2,7 +2,9 @@
 
 Использование:
 
-python3 finamdownloader.py -s \<SYMBOL> -f \<FROM> -t \<TO> -o \<FILENAME> -p \<PERIOD> \[-m <MARKET>\] \[-l\]
+```
+python3 finamdownloader.py -s <SYMBOL> -f <FROM> -t <TO> -o <FILENAME> -p <PERIOD> [-m <MARKET>] [-l]
+```
 
 где:
 
