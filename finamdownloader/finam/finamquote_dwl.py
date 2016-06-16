@@ -50,14 +50,14 @@ def download_finam_symbols():
     
 
 class Params:
-    def __init__(self, period, date_fmt = date_formats['yyyymmdd'], time_fmt = time_formats['hhmmss'], field_separator = field_separators[','], include_header = True):
+    def __init__(self, period, date_fmt = date_formats['yyyymmdd'], time_fmt = time_formats['hhmmss'], field_separator = field_separators[','], include_header = True, fill_empty = False):
         self.period = period
         self.date_format = date_fmt
         self.time_format = time_fmt
         self.field_separator = field_separator
         self.include_header = include_header
         self.force_market = None
-        self.fill_empty = False
+        self.fill_empty = fill_empty
 
 
 def __get_finam_code__(symbol, force_market=None):
