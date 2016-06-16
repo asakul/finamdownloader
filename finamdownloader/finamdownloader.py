@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 
 import finam.finamquote_dwl as f
 import sys
