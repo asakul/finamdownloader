@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from pandas import DataFrame, read_csv, ExcelWriter
-from urllib.parse import urlencode
-from urllib.request import urlopen, Request
+from urllib import urlencode
+from urllib2 import urlopen, Request
 from datetime import datetime, timedelta, date
 from time import sleep
 import codecs
@@ -87,7 +87,7 @@ def __get_url__(symbol, params, start_date, end_date):
     (symb, market) = __get_finam_code__(symbol, force_market)
 
     finam_HOST = "195.128.78.52"
-    finam_URL = "/export9.out?market={0}&f={5}&e=.csv&dtf={1}&tmf={2}&MSOR=0&mstime=on&mstimever=1&sep={3}&sep2=1&at={4}&".format(market, params.date_format, params.time_format, params.field_separator, include_header, symbol)
+    finam_URL = "/export9.out?market={0}&f={5}&e=.csv&dtf={1}&tmf={2}&MSOR=1&mstime=on&mstimever=1&sep={3}&sep2=1&at={4}&".format(market, params.date_format, params.time_format, params.field_separator, include_header, symbol)
     if params.fill_empty:
         finam_URL += 'fsp=1&'
 
@@ -215,7 +215,7 @@ def get_symbols_list():
     codes = s_code[star : en].split('\',\'')
 
     s_name = codecs.decode(finam_symbols[1], "cp1251")
-    star = str(s_name).find("[\'") + 2
+    star = s_name.find("[\'") + 2
     en = s_name.find("\']")
     names = s_name[star : en].split('\',\'')
     
