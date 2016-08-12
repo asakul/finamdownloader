@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from pandas import DataFrame, read_csv, ExcelWriter
-from urllib import urlencode
-from urllib2 import urlopen, Request
+try:
+    from urllib.parse import urlencode
+except ImportError:
+    from urllib import urlencode
+
+try:
+    from urllib2 import urlopen, Request
+except ImportError:
+    from urllib.parse import urlencode
 from datetime import datetime, timedelta, date
 from time import sleep
 import codecs
@@ -104,48 +110,6 @@ def __get_url__(symbol, params, start_date, end_date):
         return "http://" + finam_HOST + stock_URL + '&datf=1'
 
 
-def __get_tick_quotes_finam__(_symbol, start_date, end_date):
-    """
-    Return downloaded tick quotes.
-    """
-    start_date = datetime.strptime(start_date, "%Y%m%d").date()
-    end_date = datetime.strptime(end_date, "%Y%m%d").date()
-    delta = end_date - start_date
-    data = DataFrame()
-    try:
-        for i in range(delta.days + 1):
-            day = timedelta(i)
-            # exclude weekends
-            if (start_date + day).weekday() == 5 or (start_date + day).weekday() == 6:
-                continue
-
-            url = __get_url__(_symbol, periods['tick'], start_date + day, start_date + day)
-            req = Request(url)
-            req.add_header('Referer', 'http://www.finam.ru/analysis/profile0000300007/default.asp')
-            r = urlopen(req)
-            try:
-                #tmp_data = read_csv(r, sep=';').sort_index() # separate index: date and time
-                tmp_data = read_csv(r, index_col=0, parse_dates={'index': [0, 1]}, sep=';').sort_index()
-                if data.empty:
-                    data = tmp_data
-                else:
-                    data = data.append(tmp_data)
-            except ValueError as e:
-                if str(e) == 'No columns to parse from file':
-                    print('no data: {} {}'.format(_symbol, start_date + day))
-                else:
-                    print("error: ", e)
-                    #raise
-                sleep(2)  # to avoid ban :)
-            except Exception as ex:
-                print('downloading error: {} {}  = {} {}'.format(_symbol, start_date + day, sys.exc_info()[0], ex))
-
-    except Exception as e:
-        print(e)
-
-    data.columns = ['Last', 'Volume', 'Id']
-    data['Symbol'] = _symbol
-    return data
 
 def __split_dates(period, start_date, end_date):
     result = []
@@ -155,7 +119,9 @@ def __split_dates(period, start_date, end_date):
             periods['15min'] : timedelta(2 * 365),
             periods['10min'] : timedelta(2 * 365),
             periods['5min'] : timedelta(1 * 365),
-            periods['1min'] : timedelta(1 * 365) }
+            periods['1min'] : timedelta(1 * 365),
+            periods['tick'] : timedelta(1)
+            }
 
     if period == periods['month'] or period == periods['week']:
         return [(start_date, end_date)]
@@ -196,10 +162,7 @@ def get_raw_quotes_finam(symbol, params, start_date, end_date=date.today().strft
     Period can be in ['tick','1min','5min','10min','15min','30min','hour','daily','week','month']
     """
     download_finam_symbols()
-    if params.period == periods['tick']:
-        raise Exception
-    else:
-        return __get_raw_timeframe_finam__(symbol, params, start_date, end_date)
+    return __get_raw_timeframe_finam__(symbol, params, start_date, end_date)
 
 def get_or_default(a_list, key, default_value):
     try:
