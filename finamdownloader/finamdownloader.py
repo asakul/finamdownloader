@@ -7,6 +7,7 @@ import argparse
 def main():
     parser = argparse.ArgumentParser(description='Finam quote downloader')
     parser.add_argument('-s', '--symbol', action='store', dest='symbol', help='Ticker symbol to download (pass "?" to list available symbols)')
+    parser.add_argument('-y', '--symbol-file', action='store', dest='symbol_file', help='File containing symbol list')
     parser.add_argument('-f', '--from', action='store', dest='date_from', help='Starting date in YYYYMMDD format')
     parser.add_argument('-t', '--to', action='store', dest='date_to', help='Ending date in YYYYMMDD format')
     parser.add_argument('-o', '--output', action='store', dest='output', help='Target file ("-" means stdout, "!" will create filename automatically)')
@@ -18,6 +19,8 @@ def main():
     parser.add_argument('-p', '--period', action='store', dest='period', help='Quotes period: can be one of the following: ' + periods)
 
     args = parser.parse_args()
+
+    symbol_list = []
 
     if args.symbol == '?':
         syms = f.get_symbols_list()
@@ -31,7 +34,7 @@ def main():
             print("{0} : {1}".format(k, markets[k]))
         return 1
     
-    if not args.symbol:
+    if not args.symbol and not args.symbol_file:
         print("Should specify symbol")
         return 1
 
@@ -49,20 +52,27 @@ def main():
 
     out = sys.stdout
 
-    if args.output and args.output != '-':
-        if args.output == '!':
-            out = open("{0}_{1}_{2}_{3}.csv".format(args.symbol, args.date_from, args.date_to, args.period), 'wb+')
-        else:
-            out = open(args.output, 'wb+')
+    if args.symbol is not None:
+        symbol_list = args.symbol.split(',')
+    elif args.symbol_file is not None:
+        symbol_list = [line.rstrip('\n') for line in open(args.symbol_file)]
 
-    params = f.Params(f.periods[args.period])
-    if args.market:
-        params.force_market = args.market
+    for symbol in symbol_list:
+        print('Downloading symbol {}'.format(symbol))
+        if args.output and args.output != '-':
+            if args.output == '!':
+                out = open("{0}_{1}_{2}_{3}.csv".format(symbol, args.date_from, args.date_to, args.period), 'wb+')
+            else:
+                out = open(args.output, 'wb+')
 
-    if args.fill_empty:
-        params.fill_empty = True
+        params = f.Params(f.periods[args.period])
+        if args.market:
+            params.force_market = args.market
 
-    out.write(f.get_raw_quotes_finam(args.symbol, params, args.date_from, args.date_to))
+        if args.fill_empty:
+            params.fill_empty = True
+
+        out.write(f.get_raw_quotes_finam(symbol, params, args.date_from, args.date_to))
 
 
 if __name__ == '__main__':

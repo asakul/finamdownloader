@@ -8,7 +8,7 @@ except ImportError:
 try:
     from urllib2 import urlopen, Request
 except ImportError:
-    from urllib.parse import urlencode
+    from urllib.request import urlopen
 from datetime import datetime, timedelta, date
 from time import sleep
 import codecs
@@ -91,9 +91,10 @@ def __get_url__(symbol, params, start_date, end_date):
         pass
         
     (symb, market) = __get_finam_code__(symbol, force_market)
+    print(symb, market)
 
-    finam_HOST = "195.128.78.52"
-    finam_URL = "/export9.out?market={0}&f={5}&e=.csv&dtf={1}&tmf={2}&MSOR=1&mstime=on&mstimever=1&sep={3}&sep2=1&at={4}&".format(market, params.date_format, params.time_format, params.field_separator, include_header, symbol)
+    finam_HOST = "export.finam.ru"
+    finam_URL = "/export9.out?market={0}&f={5}&e=.csv&dtf={1}&tmf={2}&MSOR=0&mstime=on&mstimever=1&sep={3}&sep2=1&at={4}&".format(market, params.date_format, params.time_format, params.field_separator, include_header, symbol)
     if params.fill_empty:
         finam_URL += 'fsp=1&'
 
