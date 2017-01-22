@@ -3,12 +3,14 @@
 Использование:
 
 ```
-python3 finamdownloader.py -s <SYMBOL> -f <FROM> -t <TO> -o <FILENAME> -p <PERIOD> [-m <MARKET>] [-l]
+python3 finamdownloader.py -s <SYMBOL> -y <SYMBOL-FILE> -f <FROM> -t <TO> -o <FILENAME> -p <PERIOD> [-m <MARKET>] [-l]
 ```
 
 где:
 
     <SYMBOL> - тикер, который нужно скачать, если указать '?', то будет выведен список всех тикеров
+    
+    <SYMBOL_FILE> - путь к файлу со списком всех тикеров, которые должны быть скачаны
 
     <FROM> - дата начала отрезка в формате YYYYMMDD
 
