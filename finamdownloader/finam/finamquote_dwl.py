@@ -74,6 +74,7 @@ def __get_finam_code__(symbol, force_market=None):
                 return (id_, market)
             if force_market is None and market in archives: # Skip RTS
                 continue
+            return (id_, market)
     else:
         raise Exception("%s not found\r\n" % symbol)
 
@@ -86,7 +87,7 @@ def __get_url__(symbol, params, start_date, end_date):
     force_market = None
     try:
         force_market = int(params.force_market)
-    except KeyError:
+    except:
         pass
         
     (symb, market) = __get_finam_code__(symbol, force_market)
