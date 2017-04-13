@@ -69,12 +69,15 @@ class Params:
 def __get_finam_code__(symbol, force_market=None):
     symbols = get_symbols_list()
     for (code, _, id_, market, _) in symbols:
-        if code == symbol:
-            if force_market is not None and force_market == market:
+        if force_market is not None:
+            if code == symbol and force_market == market:
                 return (id_, market)
-            if force_market is None and market in archives: # Skip RTS
+        else:
+            if market in archives: # Skip RTS
                 continue
-            return (id_, market)
+            if symbol == code:
+                return (id_, market)
+
     else:
         raise Exception("%s not found\r\n" % symbol)
 
@@ -94,7 +97,7 @@ def __get_url__(symbol, params, start_date, end_date):
     print(symb, market, force_market)
 
     finam_HOST = "export.finam.ru"
-    finam_URL = "/export9.out?market={0}&f={5}&e=.csv&dtf={1}&tmf={2}&MSOR=0&mstime=on&mstimever=1&sep={3}&sep2=1&at={4}&".format(market, params.date_format, params.time_format, params.field_separator, include_header, symbol)
+    finam_URL = "/export9.out?market={0}&apply=0&f={5}&e=.csv&dtf={1}&tmf={2}&MSOR=0&mstime=on&mstimever=1&sep={3}&sep2=1&at={4}&".format(market, params.date_format, params.time_format, params.field_separator, include_header, symbol)
     if params.fill_empty:
         finam_URL += 'fsp=1&'
 
