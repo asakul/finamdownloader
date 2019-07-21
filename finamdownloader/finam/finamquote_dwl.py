@@ -13,6 +13,7 @@ from datetime import datetime, timedelta, date
 from time import sleep
 import codecs
 import sys
+import re
 
 
 finam_symbols = None 
@@ -45,14 +46,16 @@ field_separators = {',' : 1,
         'tab' : 4,
         'space' : 5 }
 
-archives = [3, 16, 17, 18, 31, 32, 38, 39, 517]
+archives = [3, 8, 16, 17, 18, 31, 32, 38, 39, 517]
 
 __all__ = ['periods', 'date_formats', 'time_formats', 'field_separators', 'get_quotes_finam', 'get_symbols_list', 'get_markets_list']
 
 def download_finam_symbols():
     global finam_symbols
     if not finam_symbols:
-        finam_symbols = urlopen('http://www.finam.ru/cache/icharts/icharts.js').readlines()
+        html_page = urlopen('https://www.finam.ru/profile/moex-akcii/sberbank/compare/').read().decode('cp1251')
+        match = re.search('<script src="(.*/icharts.js)"', html_page)
+        finam_symbols = urlopen('http://www.finam.ru' + match.group(1)).readlines()
     
 
 class Params:
@@ -79,7 +82,15 @@ def __get_finam_code__(symbol, force_market=None):
                 return (id_, market)
 
     else:
-        raise Exception("%s not found\r\n" % symbol)
+        for (code, _, id_, market, _) in symbols:
+            if force_market is not None:
+                if code == symbol and force_market == market:
+                    return (id_, market)
+            else:
+                if symbol == code:
+                    return (id_, market)
+        else:
+            raise Exception("%s not found\r\n" % symbol)
 
 
 def __get_url__(symbol, params, start_date, end_date):
@@ -176,8 +187,8 @@ def get_or_default(a_list, key, default_value):
 
 def get_symbols_list():
     download_finam_symbols()
-    s_code = str(finam_symbols[2])
-    star = str(s_code).find("[\'") + 2
+    s_code = codecs.decode(finam_symbols[2], "cp1251")
+    star = s_code.find("[\'") + 2
     en = s_code.find("\']")
     codes = s_code[star : en].split('\',\'')
 
@@ -187,12 +198,12 @@ def get_symbols_list():
     names = s_name[star : en].split('\',\'')
     
     s_id = codecs.decode(finam_symbols[0], "cp1251")
-    star = str(s_id).find("[") + 1
+    star = s_id.find("[") + 1
     en = s_id.find("]")
     ids = s_id[star : en].split(',')
     
     s_markets = codecs.decode(finam_symbols[3], "cp1251")
-    star = str(s_markets).find("[") + 1
+    star = s_markets.find("[") + 1
     en = s_markets.find("]")
     markets_s = s_markets[star : en].split(',')
 
