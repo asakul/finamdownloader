@@ -53,9 +53,10 @@ __all__ = ['periods', 'date_formats', 'time_formats', 'field_separators', 'get_q
 def download_finam_symbols():
     global finam_symbols
     if not finam_symbols:
-        html_page = urlopen('https://www.finam.ru/profile/moex-akcii/sberbank/compare/').read().decode('cp1251')
-        match = re.search('<script src="(.*/icharts.js)"', html_page)
-        finam_symbols = urlopen('http://www.finam.ru' + match.group(1)).readlines()
+        finam_symbols = urlopen('http://www.finam.ru/cache/icharts/icharts.js').readlines()
+        #html_page = urlopen('https://www.finam.ru/profile/moex-akcii/sberbank/compare/').read().decode('cp1251')
+        #match = re.search('<script src="(.*/icharts.js)"', html_page)
+        #finam_symbols = urlopen('http://www.finam.ru' + match.group(1)).readlines()
     
 
 class Params:
