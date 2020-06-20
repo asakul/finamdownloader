@@ -120,7 +120,7 @@ def __get_url__(symbol, params, start_date, end_date):
 
     stock_URL = finam_URL + request_params
     if params.period == periods['tick']:
-        return "http://" + finam_HOST + stock_URL + '&code='+ symbol + '&datf=11'
+        return "http://" + finam_HOST + stock_URL + '&datf=6'
     else:
         return "http://" + finam_HOST + stock_URL + '&datf=1'
 
@@ -135,7 +135,7 @@ def __split_dates(period, start_date, end_date):
             periods['10min'] : timedelta(2 * 365),
             periods['5min'] : timedelta(1 * 365),
             periods['1min'] : timedelta(1 * 365),
-            periods['tick'] : timedelta(1)
+            periods['tick'] : timedelta(60)
             }
 
     if period == periods['month'] or period == periods['week']:
@@ -161,6 +161,8 @@ def __get_raw_timeframe_finam__(_symbol, params, start_date, end_date):
     date_list.pop(0)
     params.include_header = False
     while len(date_list) > 0:
+        if params.period == periods['tick']:
+            sleep(60)
         sleep(2)  # to avoid ban :)
         (s, e) = date_list[0]
         date_list.pop(0)
